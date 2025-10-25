@@ -84,5 +84,27 @@ async def get_notes(user=Depends(is_authenticated), db:Session = Depends(get_db)
     notes = db.query(NotesModel).filter(NotesModel.user_id == user.id).all()
     return notes
 
+@user_admin.put("/notes/{note_id}")
+async def update_note(note_id:int, updated_note:CreateNotesModelSchema, user=Depends(is_authenticated), db:Session=Depends(get_db)):
+    note = db.query(NotesModel).filter(NotesModel.id == note_id).first()
+    if not note:
+        raise HTTPException(status_code=404, detail='Note not found')
+    if note.user_id != user.id:
+        raise HTTPException(status_code=403, detail="You cannot edit this note ")
+    
+    note.title = updated_note.title
+    note.content = updated_note.content
+    db.commit()
+    return {"message": "Note updated succesfully"}
 
+@user_admin.delete("notes/{note_id}")
+async def delete_note(note_id:int, user=Depends(is_authenticated), db:Session=Depends(get_db)):
+    note = db.query(NotesModel).filter(NotesModel.id == note_id).first()
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+    if note.user_id != user.id:
+        raise HTTPException(status_code=403, detail="You cannot delete this note")
 
+    db.delete(note)
+    db.commit()
+    return {"message": "Note delete successfully"}
