@@ -24,8 +24,8 @@ def is_admin(user=Depends(is_authenticated)):
         )
     return True
 
-def is_owner(note_user_id:int, user=Depends(is_authenticated)):
-    if note_user_id != user.id:
+def is_owner(user=Depends(is_authenticated)):
+    if str(user.role).lower() != UserType.ADMIN.value:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail='You do not have permission to access this resource'

@@ -1,4 +1,4 @@
-from .models import UserModel, SessionModel
+from .models import UserModel, SessionModel,UserType
 from .helpers import hash_password, verify_password, authenticate
 from .schemas import CreateUserModelSchema, UserModelResponse, LoginUserModel
 from db_config import get_db
@@ -11,7 +11,10 @@ user_admin = APIRouter()
 
 @user_admin.post('/register')
 async def register_endpoint(user:CreateUserModelSchema, db: Session = Depends(get_db)):
-    new_user = UserModel(username=user.username, email=user.email, password=hash_password(user.password))
+    role_value = user.role.lower()
+    if role_value not in ["admin", "user"]:
+        raise HTTPException(status_code=400, detail="invalid role")
+    new_user = UserModel(username=user.username, email=user.email, password=hash_password(user.password), role = UserType(role_value))
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
