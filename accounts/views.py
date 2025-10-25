@@ -65,3 +65,24 @@ async def delete_user(user_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "User deleted successfully"}
 
+
+#-----------------------------------------------------------------------------
+from .models import NotesModel
+from .schemas import CreateNotesModelSchema, NotesModelResponse
+
+
+@user_admin.post("/notes/create")
+async def create_note(note:CreateNotesModelSchema, user=Depends(is_authenticated), db:Session = Depends(get_db)):
+    new_note = NotesModel(title=note.title, content=note.content, user_id=user.id)
+    db.add(new_note)
+    db.commit()
+    db.refresh(new_note)
+    return {"message": "Note created successfully"}
+
+@user_admin.get("/notes", response_model=list[NotesModelResponse])
+async def get_notes(user=Depends(is_authenticated), db:Session = Depends(get_db)):
+    notes = db.query(NotesModel).filter(NotesModel.user_id == user.id).all()
+    return notes
+
+
+
