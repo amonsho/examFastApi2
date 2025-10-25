@@ -84,6 +84,15 @@ async def get_notes(user=Depends(is_authenticated), db:Session = Depends(get_db)
     notes = db.query(NotesModel).filter(NotesModel.user_id == user.id).all()
     return notes
 
+
+@user_admin.get("/notes/{note_id}", dependencies=[Depends(is_authenticated)], response_model=NotesModelResponse)
+async def get_note_by_id(note_id:int, current_user=Depends(is_authenticated), db:Session=Depends(get_db)):
+    note = db.query(NotesModel).filter(NotesModel.id == note_id, NotesModel.user_id == current_user.id).first()
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+    return note
+
+
 @user_admin.put("/notes/{note_id}")
 async def update_note(note_id:int, updated_note:CreateNotesModelSchema, user=Depends(is_authenticated), db:Session=Depends(get_db)):
     note = db.query(NotesModel).filter(NotesModel.id == note_id).first()
